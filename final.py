@@ -597,3 +597,223 @@ def solve(currunt):
                     break
 
 solve(start)
+
+
+#a*
+def aStarAlgo(start_node, stop_node):
+         
+        open_set = set(start_node) 
+        closed_set = set()
+        g = {} 
+        parents = {}
+        g[start_node] = 0
+        parents[start_node] = start_node
+         
+         
+        while len(open_set) > 0:
+            n = None
+            for v in open_set:
+                if n == None or g[v] + heuristic(v) < g[n] + heuristic(n):
+                    n = v
+             
+                     
+            if n == stop_node or Graph_nodes[n] == None:
+                pass
+            else:
+                for (m, weight) in get_neighbors(n):
+                    if m not in open_set and m not in closed_set:
+                        open_set.add(m)
+                        parents[m] = n
+                        g[m] = g[n] + weight
+                    else:
+                        if g[m] > g[n] + weight:
+                            g[m] = g[n] + weight
+                            parents[m] = n
+                            if m in closed_set:
+                                closed_set.remove(m)
+                                open_set.add(m)
+ 
+            if n == None:
+                print('Path does not exist!')
+                return None
+            if n == stop_node:
+                path = []
+ 
+                while parents[n] != n:
+                    path.append(n)
+                    n = parents[n]
+ 
+                path.append(start_node)
+ 
+                path.reverse()
+ 
+                print('Path found: {}'.format(path))
+                return path
+ 
+            open_set.remove(n)
+            closed_set.add(n)
+ 
+        print('Path does not exist!')
+        return None
+def get_neighbors(v):
+    if v in Graph_nodes:
+        return Graph_nodes[v]
+    else:
+        return None
+def heuristic(n):
+        H_dist = {
+            'A': 11,
+            'B': 6,
+            'C': 99,
+            'D': 1,
+            'E': 7,
+            'G': 0,
+             
+        }
+ 
+        return H_dist[n]
+Graph_nodes = {
+    'A': [('B', 2), ('E', 3)],
+    'B': [('C', 1),('G', 9)],
+    'C': None,
+    'E': [('D', 6)],
+    'D': [('G', 1)],
+     
+}
+aStarAlgo('A', 'G')
+
+
+#ao*
+
+def Cost(H, condition, weight = 1):
+    cost = {}
+    if 'AND' in condition:
+        AND_nodes = condition['AND']
+        Path_A = ' AND '.join(AND_nodes)
+        PathA = sum(H[node]+weight for node in AND_nodes)
+        cost[Path_A] = PathA
+ 
+    if 'OR' in condition:
+        OR_nodes = condition['OR']
+        Path_B =' OR '.join(OR_nodes)
+        PathB = min(H[node]+weight for node in OR_nodes)
+        cost[Path_B] = PathB
+    return cost
+
+def update_cost(H, Conditions, weight=1):
+    Main_nodes = list(Conditions.keys())
+    Main_nodes.reverse()
+    least_cost= {}
+    for key in Main_nodes:
+        condition = Conditions[key]
+        print(key,':', Conditions[key],'>>>', Cost(H, condition, weight))
+        c = Cost(H, condition, weight)
+        H[key] = min(c.values())
+        least_cost[key] = Cost(H, condition, weight)           
+    return least_cost
+
+def shortest_path(Start,Updated_cost, H):
+    Path = Start
+    if Start in Updated_cost.keys():
+        Min_cost = min(Updated_cost[Start].values())
+        key = list(Updated_cost[Start].keys())
+        values = list(Updated_cost[Start].values())
+        Index = values.index(Min_cost)
+        Next = key[Index].split()
+        if len(Next) == 1:
+ 
+            Start =Next[0]
+            Path += ' = ' +shortest_path(Start, Updated_cost, H)
+        else:
+            Path +='=('+key[Index]+') '
+ 
+            Start = Next[0]
+            Path += '[' +shortest_path(Start, Updated_cost, H) + ' + '
+ 
+            Start = Next[-1]
+            Path +=  shortest_path(Start, Updated_cost, H) + ']'
+ 
+    return Path
+H1 = {'A': 1, 'B': 6, 'C': 2, 'D': 12, 'E': 2, 'F': 1, 'G': 5, 'H': 7, 'I': 7, 'J': 1, 'T': 3}
+ 
+ 
+Conditions = {
+ 'A': {'OR': ['D'], 'AND': ['B', 'C']},
+ 'B': {'OR': ['G', 'H']},
+ 'C': {'OR': ['J']},
+ 'D': {'AND': ['E', 'F']},
+ 'G': {'OR': ['I']}
+    
+}
+
+weight = 1
+print('Updated Cost :')
+Updated_cost = update_cost(H1, Conditions, weight=1)
+print('*'*75)
+print('Shortest Path :\n',shortest_path('A', Updated_cost,H1))
+
+
+#DFS ID
+# Python program to print DFS traversal from a given
+# given graph
+from collections import defaultdict
+
+# This class represents a directed graph using adjacency
+# list representation
+class Graph:
+
+	def __init__(self,vertices):
+
+		# No. of vertices
+		self.V = vertices
+
+		# default dictionary to store graph
+		self.graph = defaultdict(list)
+
+	# function to add an edge to graph
+	def addEdge(self,u,v):
+		self.graph[u].append(v)
+
+	# A function to perform a Depth-Limited search
+	# from given source 'src'
+	def DLS(self,src,target,maxDepth):
+
+		if src == target : return True
+
+		# If reached the maximum depth, stop recursing.
+		if maxDepth <= 0 : return False
+
+		# Recur for all the vertices adjacent to this vertex
+		for i in self.graph[src]:
+				if(self.DLS(i,target,maxDepth-1)):
+					return True
+		return False
+
+	# IDDFS to search if target is reachable from v.
+	# It uses recursive DLS()
+	def IDDFS(self,src, target, maxDepth):
+
+		# Repeatedly depth-limit search till the
+		# maximum depth
+		for i in range(maxDepth):
+			if (self.DLS(src, target, i)):
+				return True
+		return False
+
+# Create a graph given in the above diagram
+g = Graph (7);
+g.addEdge(0, 1)
+g.addEdge(0, 2)
+g.addEdge(1, 3)
+g.addEdge(1, 4)
+g.addEdge(2, 5)
+g.addEdge(2, 6)
+
+target = 6; maxDepth = 3; src = 0
+
+if g.IDDFS(src, target, maxDepth) == True:
+	print ("Target is reachable from source " +
+		"within max depth")
+else :
+	print ("Target is NOT reachable from source " +
+		"within max depth")
